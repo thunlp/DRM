@@ -1,124 +1,104 @@
-# DRM
+<div align="center">
 
-Official code release for **DRM**.
+## Diffusion Reward Models
 
-Paper: TODO: paste arXiv or project page link here.
+[![Paper](https://img.shields.io/badge/Paper-coming--soon-A42C25?style=for-the-badge&logo=arxiv&logoColor=white)](https://github.com/thunlp/DRM) [![GitHub](https://img.shields.io/badge/DRM-000000?style=for-the-badge&logo=github&logoColor=white)](https://github.com/thunlp/DRM) [![HF Models](https://img.shields.io/badge/Models-available-fcd022?style=for-the-badge&logo=huggingface&logoColor=000)](https://huggingface.co/Teburile/DRM)
 
-Checkpoints: [Teburile/DRM](https://huggingface.co/Teburile/DRM)
+</div>
 
-## Overview
+<div align="center">
+  <p>
+    <a href="#-news"><b>🎉 News</b></a> •
+    <a href="#-links"><b>🔗 Links</b></a> •
+    <a href="#-introduction"><b>📖 Introduction</b></a> •
+    <a href="#-getting-started"><b>✨ Getting Started</b></a>
+  </p>
+  <p>
+    <a href="#-usage"><b>🔧 Usage</b></a> •
+    <a href="#-evaluation"><b>📃 Evaluation</b></a> •
+    <a href="#-citation"><b>🎈 Citation</b></a> •
+    <a href="#-acknowledgement"><b>🌻 Acknowledgement</b></a>
+  </p>
+</div>
 
-DRM uses RewardDiT models to generate reward values from FsfairX-LLaMA3-RM-v0.1 text embeddings.
+---
 
-This repository contains:
+## 🎉 News
 
-- data preparation scripts for ArmoRM and Tulu3 preference data
-- RewardDiT model code
-- training scripts for the multi-objective and preference RewardDiT models
-- a lightweight `ScoreGenerator` for inference with the released checkpoints
+- **[2026-09]** DRM is released. The code and the DRM-Multi-8B and DRM-Pref-8B checkpoints are now available.
 
-The public inference code does not use gate models or reward debiasing transforms.
+## 🔗 Links
 
-## Released Checkpoints
+- 📜 Paper — coming soon
+- 🤗 [DRM-Multi-8B and DRM-Pref-8B](https://huggingface.co/Teburile/DRM)
+- 💻 [GitHub](https://github.com/thunlp/DRM)
 
-The checkpoints are hosted on Hugging Face:
+## 📖 Introduction
 
-```text
-https://huggingface.co/Teburile/DRM
-```
+![DRM overview](figures/fig01_drm-overview.png)
 
-| Name | File on Hugging Face | Reward Dim | Description |
-| --- | --- | ---: | --- |
-| DRM-Multi-8B | `DRM-Multi-8B/model.pth` | 19 | RewardDiT trained on ArmoRM multi-objective labels |
-| DRM-Pref-8B | `DRM-Pref-8B/model.pth` | 1 | RewardDiT trained on Tulu3 pair-preference data |
+Reward models underpin the alignment of large language models, yet dominant designs reduce each prompt–response pair to a point estimate or to a distribution from a fixed parametric family. This is at odds with human preference, which is inherently **multimodal** in the statistical sense: the same response can reasonably receive different judgments, and no single parametric family captures every pattern of disagreement.
 
-Recommended inference settings for both checkpoints:
+**DRM** (Diffusion Reward Model) recasts reward modeling as conditional density estimation over `p(r | x, y)`. Conditioned on a frozen LLM encoder, a lightweight Diffusion Transformer denoises Gaussian noise into a reward vector, placing no parametric assumption on the output distribution. **DRM diffuses reward vectors, not text.**
 
-```text
-mask_split = false
-num_steps = 10
-guidance_scale = 7.0
-num_samples = 32
-gate = off
-debias = off
-```
+- **One head, two supervision regimes:** multi-attribute regression with masked denoising and pairwise preference learning with a Bradley–Terry objective use the same architecture.
+- **Distributional inference:** `N` samples form an empirical reward distribution that can provide a scalar score, uncertainty estimate, or risk-sensitive statistic.
+- **Reward-axis test-time scaling:** drawing more samples can tighten the reward estimate without retraining.
+- **A lightweight trainable head:** only the approximately 12M-parameter RewardDiT is trained; the 7.5B encoder remains frozen.
 
-These are the defaults in `score_generator.py`.
+### How it works
 
-## Environment
+During training, a frozen LLM encoder maps `(x, y)` to a hidden state `h`, and RewardDiT learns to denoise a reward vector conditioned on `h`:
 
-The code was checked with:
+- **DRM-Multi-8B** predicts 19 reward dimensions and uses a masked denoising loss over multi-attribute labels.
+- **DRM-Pref-8B** predicts one reward dimension and combines denoising with a Bradley–Terry objective over pairwise preferences.
 
-```text
-Python 3.11
-torch 2.7.0+cu126
-diffusers 0.36.0
-transformers 5.8.0
-datasets 4.8.5
-numpy 2.4.3
-tqdm 4.67.3
-```
+At inference time, DRM draws `N` reward vectors with DDIM. The released defaults are 10 sampling steps, guidance scale 7, and `N=32`.
 
-Install the minimal dependencies:
+## 🔍 Key Findings
+
+- **The diffusion head improves matched-data performance.** With the same training data and FsfairX backbone, DRM-Multi-8B reaches a **66.2** average across six metrics, compared with **62.3** for ArmoRM.
+- **Human disagreement has structure, and DRM tracks it.** DRM's multimodal-output ratio rises with the level of disagreement in repeated annotations.
+- **A small number of denoising steps is sufficient.** Ten DDIM steps work well for low-dimensional rewards; increasing the count to 50–100 degrades ranking accuracy.
+
+![DRM multimodality and human disagreement](figures/fig02_multimodal-ratio-vs-human-disagreement.png)
+
+## ✨ Getting Started
+
+### Environment setup
 
 ```bash
+git clone https://github.com/thunlp/DRM.git
+cd DRM
+
+conda create -n drm python=3.10
+conda activate drm
 pip install -r requirements.txt
 ```
 
-FlashAttention is optional. If installed, the data preparation scripts will use it for faster FsfairX encoder inference.
+FlashAttention is optional. Without it, the data-preparation scripts fall back to PyTorch SDPA on CUDA or eager attention on CPU.
 
-## Download Checkpoints
-
-Install the Hugging Face Hub CLI or use `huggingface_hub` directly. One simple option is:
+### Download checkpoints
 
 ```bash
 hf download Teburile/DRM DRM-Multi-8B/model.pth --local-dir checkpoints
 hf download Teburile/DRM DRM-Pref-8B/model.pth --local-dir checkpoints
 ```
 
-This creates:
+This creates `checkpoints/DRM-Multi-8B/model.pth` and `checkpoints/DRM-Pref-8B/model.pth`.
 
-```text
-checkpoints/DRM-Multi-8B/model.pth
-checkpoints/DRM-Pref-8B/model.pth
-```
+### Data preparation
 
-## Inference
-
-Run DRM-Multi-8B:
+Text is encoded with `sfairXC/FsfairX-LLaMA3-RM-v0.1` by default. Use `--limit 0` to process the full dataset.
 
 ```bash
-python score_generator.py \
-  --ckpt checkpoints/DRM-Multi-8B/model.pth \
-  --prompt "What is photosynthesis?" \
-  --response "Photosynthesis is the process by which plants convert light into chemical energy."
-```
-
-Run DRM-Pref-8B:
-
-```bash
-python score_generator.py \
-  --ckpt checkpoints/DRM-Pref-8B/model.pth \
-  --prompt "What is photosynthesis?" \
-  --response "Photosynthesis is the process by which plants convert light into chemical energy."
-```
-
-The command prints a list containing one scalar score.
-
-## Data Preparation
-
-Prepare ArmoRM multi-objective data:
-
-```bash
+# Multi-attribute data (ArmoRM, 19 dimensions)
 python prepare_armorm_data.py \
   --output_root data/armo_dataset \
   --limit 0 \
   --max_length 4096
-```
 
-Prepare Tulu3 pair-preference data:
-
-```bash
+# Pairwise-preference data (Tulu3)
 python prepare_tulu3_pair_data.py \
   --output_root data/armo_dataset \
   --dataset_split all \
@@ -126,79 +106,76 @@ python prepare_tulu3_pair_data.py \
   --max_length 4096
 ```
 
-Use a small positive `--limit` such as `1000` for debugging.
-
-The scripts default to the official Hugging Face endpoint. If a mirror is needed, pass it explicitly:
+### Training
 
 ```bash
---hf_endpoint https://hf-mirror.com
-```
-
-## Training
-
-Train the 19-dimensional DRM-Multi RewardDiT:
-
-```bash
+# DRM-Multi-8B: masked denoising over 19 reward dimensions
 python train_dit_armorm.py \
   --data_root data/armo_dataset \
-  --output_dir outputs/dit_armorm \
-  --limit None \
-  --epochs 20 \
-  --batch_size 64
-```
+  --output_dir outputs/dit_armorm
 
-Train the one-dimensional DRM-Pref RewardDiT:
-
-```bash
+# DRM-Pref-8B: denoising plus Bradley–Terry preference learning
 python train_dit_tulu3_pair.py \
   --data_root data/armo_dataset \
-  --output_dir outputs/dit_tulu3_pair \
-  --limit None \
-  --epochs 20 \
-  --batch_size 64
+  --output_dir outputs/dit_tulu3_pair
 ```
 
-The Tulu3 pair-preference loss is:
+All experiments were conducted on NVIDIA A800-SXM4-80GB GPUs. Reward-head training takes approximately 1.54 GPU-hours in total, excluding one-time frozen-encoder embedding generation.
 
-```text
-denoising loss + bt_alpha * Bradley-Terry loss + reward_reg_weight * reward_l2
+## 🔧 Usage
+
+Score a prompt–response pair with either released checkpoint:
+
+```bash
+# DRM-Multi-8B
+python score_generator.py \
+  --ckpt checkpoints/DRM-Multi-8B/model.pth \
+  --prompt "User prompt" \
+  --response "Assistant response"
+
+# DRM-Pref-8B
+python score_generator.py \
+  --ckpt checkpoints/DRM-Pref-8B/model.pth \
+  --prompt "User prompt" \
+  --response "Assistant response"
 ```
 
-The default `reward_reg_weight` is `0.001`, matching the released DRM-Pref-8B checkpoint.
+The scorer defaults to 10 DDIM steps, guidance scale 7, and 32 reward samples. It averages over samples and then over reward dimensions to return one scalar per input.
 
-## Repository Structure
+## 📃 Evaluation
 
-```text
-.
-├── dit.py
-├── score_generator.py
-├── prepare_armorm_data.py
-├── prepare_tulu3_pair_data.py
-├── train_dit_armorm.py
-├── train_dit_tulu3_pair.py
-├── configs/
-│   ├── DRM-Multi-8B/config.json
-│   └── DRM-Pref-8B/config.json
-└── requirements.txt
-```
+The table reports results across five benchmarks and six metrics. For ArmoRM, QRM, URM, and DRM-Multi-8B, the training data and FsfairX backbone are matched; only the reward head differs.
 
-## Citation
+| Reward Model | RewardBench v2 | PPE Pref | PPE Corr | RMB Pairwise | RM-Bench | JudgeBench | Avg. |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| ArmoRM-Llama3-8B-v0.1 | **66.5** | 60.6 | 61.4 | 64.6 | 67.7 | 53.2 | 62.3 |
+| QRM-Llama3.1-8B-v2 | 70.7 | 57.2 | 60.3 | 61.1 | 72.5 | 62.6 | 64.1 |
+| URM-LLaMa-3.1-8B | 73.9 | 60.2 | 60.4 | 65.7 | 72.0 | 64.1 | 66.1 |
+| **DRM-Multi-8B** | 65.6 | 62.5 | 63.8 | **78.0** | 68.8 | 58.6 | **66.2** |
+| **DRM-Pref-8B** | 65.7 | 63.0 | 62.5 | **78.2** | 68.1 | 57.1 | 65.8 |
 
-TODO: paste BibTeX citation here after the paper is available.
+DRM-Multi-8B improves the six-metric average by **3.9 points over ArmoRM** and performs on par with parametric distributional heads without assuming an output family. It does not lead on every benchmark: for example, its RewardBench v2 score is 65.6, compared with 66.5 for ArmoRM.
+
+![Reward-axis scaling on RewardBench v2](figures/fig04_reward-axis-scaling-rewardbench-v2.png)
+
+Increasing the number of reward samples raises DRM-Multi-8B from 56.5 at `N=1` to 65.6 at `N=32` on RewardBench v2. The learned distribution can also support uncertainty-aware rejection and risk-sensitive aggregation.
+
+## 🎈 Citation
+
+If you find DRM useful, please cite our work:
 
 ```bibtex
-@article{TODO,
-  title = {TODO},
-  author = {TODO},
-  journal = {arXiv preprint},
-  year = {TODO}
+@article{drm2026,
+  title  = {Diffusion Reward Models},
+  author = {Wang, Xiangyang and He, Bingxiang and Liu, Zeyuan and Wang, Jiaze and Qiao, Ziqing and Zuo, Yuxin and Yu, Tianyu and Chen, Qianyu and Gao, Huan-ang and Qian, Cheng and Zhang, Wenbin and Li, Ran and Sun, Youbang and Ding, Ning and Shi, Yuanchun and Liu, Zhiyuan and Xiao, Chaojun and Yu, Chun},
+  year   = {2026}
 }
 ```
 
-## Notes
+## 🌻 Acknowledgement
 
-- Checkpoints are not committed to this GitHub repository. They are hosted at [Teburile/DRM](https://huggingface.co/Teburile/DRM).
-- All default paths in the code are relative paths.
-- The default encoder is `sfairXC/FsfairX-LLaMA3-RM-v0.1`.
-- DRM-Multi-8B is a 19-dimensional RewardDiT.
-- DRM-Pref-8B is a one-dimensional RewardDiT.
+DRM builds on the frozen encoder from [FsfairX-LLaMA3-RM-v0.1](https://huggingface.co/sfairXC/FsfairX-LLaMA3-RM-v0.1) and uses [Diffusers](https://github.com/huggingface/diffusers) for DDIM sampling. Training data comes from the ArmoRM and Tulu3 preference corpora. We thank these projects for their open-source contributions.
+
+## ⭐ Star History
+
+[![Star History Chart](https://api.star-history.com/svg?repos=thunlp/DRM&type=Date)](https://star-history.com/#thunlp/DRM&Date)
