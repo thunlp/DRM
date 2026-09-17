@@ -1,0 +1,33 @@
+{
+  "model_name": "DRM-Pref-8B",
+  "model_type": "RewardDiT",
+  "base_encoder": "sfairXC/FsfairX-LLaMA3-RM-v0.1",
+  "checkpoint_file": "model.pth",
+  "reward_dim": 1,
+  "text_emb_dim": 4096,
+  "hidden_size": 384,
+  "depth": 3,
+  "num_heads": 6,
+  "mlp_ratio": 4.0,
+  "dropout": 0.2,
+  "class_dropout_prob": 0.15,
+  "num_train_timesteps": 1000,
+  "beta_schedule": "squaredcos_cap_v2",
+  "prediction_type": "epsilon",
+  "training_data": "allenai/llama-3.1-tulu-3-8b-preference-mixture",
+  "loss": {
+    "denoise_loss_weight": 1.0,
+    "bt_alpha": 0.5,
+    "reward_reg_weight": 0.001
+  },
+  "recommended_inference": {
+    "mask_split": false,
+    "num_steps": 10,
+    "guidance_scale": 7.0,
+    "num_samples": 32,
+    "gate": false,
+    "debias": false
+  },
+  "paper": "TODO: paste arXiv or project page link here",
+  "code": "TODO: paste GitHub repository link here"
+}

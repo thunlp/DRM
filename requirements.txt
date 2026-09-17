@@ -1,0 +1,8 @@
+torch
+diffusers
+transformers
+datasets
+numpy
+tqdm
+accelerate
+sentencepiece
