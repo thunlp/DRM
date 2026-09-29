@@ -29,7 +29,7 @@
 
 ## 🔗 Links
 
-- 📜 Paper — coming soon
+- 📜 [Paper](https://huggingface.co/papers/2609.33803)
 - 🤗 [DRM-Multi-8B and DRM-Pref-8B](https://huggingface.co/Teburile/DRM)
 - 💻 [GitHub](https://github.com/thunlp/DRM)
 
@@ -165,10 +165,15 @@ Increasing the number of reward samples raises DRM-Multi-8B from 56.5 at `N=1` t
 If you find DRM useful, please cite our work:
 
 ```bibtex
-@article{drm2026,
-  title  = {Diffusion Reward Models},
-  author = {Wang, Xiangyang and He, Bingxiang and Liu, Zeyuan and Wang, Jiaze and Qiao, Ziqing and Zuo, Yuxin and Yu, Tianyu and Chen, Qianyu and Gao, Huan-ang and Qian, Cheng and Zhang, Wenbin and Li, Ran and Sun, Youbang and Ding, Ning and Shi, Yuanchun and Liu, Zhiyuan and Xiao, Chaojun and Yu, Chun},
-  year   = {2026}
+@misc{wang2026diffusionrewardmodels,
+      title={Diffusion Reward Models}, 
+      author={Xiangyang Wang and Bingxiang He and Zeyuan Liu and Jiaze WangZiqing Qiao and Yuxin Zuo and Huan-ang Gao and Cheng Qian and Wenbin Zhang and Ran Li and Youbang Sun and Ning Ding and Yuanchun Shi and Zhiyuan Liu and Chaojun Xiao and Chun Yu},
+      year={2026},
+      eprint={2609.33803},
+      archivePrefix={arXiv},
+      primaryClass={cs.LG},
+      url={https://arxiv.org/abs/2609.33803}, 
+}
 }
 ```
 
@@ -176,6 +181,3 @@ If you find DRM useful, please cite our work:
 
 DRM builds on the frozen encoder from [FsfairX-LLaMA3-RM-v0.1](https://huggingface.co/sfairXC/FsfairX-LLaMA3-RM-v0.1) and uses [Diffusers](https://github.com/huggingface/diffusers) for DDIM sampling. Training data comes from the ArmoRM and Tulu3 preference corpora. We thank these projects for their open-source contributions.
 
-## ⭐ Star History
-
-[![Star History Chart](https://api.star-history.com/svg?repos=thunlp/DRM&type=Date)](https://star-history.com/#thunlp/DRM&Date)
