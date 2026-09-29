@@ -2,7 +2,11 @@
 
 ## Diffusion Reward Models
 
-[![Paper](https://img.shields.io/badge/Paper-coming--soon-A42C25?style=for-the-badge&logo=arxiv&logoColor=white)](https://huggingface.co/papers/2609.33803) [![GitHub](https://img.shields.io/badge/DRM-000000?style=for-the-badge&logo=github&logoColor=white)](https://github.com/thunlp/DRM) [![HF Models](https://img.shields.io/badge/Models-available-fcd022?style=for-the-badge&logo=huggingface&logoColor=000)](https://huggingface.co/Teburile/DRM)
+<p align="center">
+  <a href="https://huggingface.co/papers/2609.33803"><img src="https://img.shields.io/badge/Paper-HuggingFace-A42C25?style=for-the-badge&logo=huggingface&logoColor=white" alt="Paper"></a>
+  <a href="https://github.com/thunlp/DRM"><img src="https://img.shields.io/badge/Code-DRM-000000?style=for-the-badge&logo=github&logoColor=white" alt="GitHub"></a>
+  <a href="https://huggingface.co/Teburile/DRM"><img src="https://img.shields.io/badge/Models-HuggingFace-fcd022?style=for-the-badge&logo=huggingface&logoColor=000" alt="Models"></a>
+</p>
 
 </div>
 
