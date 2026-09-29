@@ -174,7 +174,6 @@ If you find DRM useful, please cite our work:
       primaryClass={cs.LG},
       url={https://arxiv.org/abs/2609.33803}, 
 }
-}
 ```
 
 ## 🌻 Acknowledgement
